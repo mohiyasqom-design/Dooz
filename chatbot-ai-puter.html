@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>چت‌بات AI</title>
+<script src="https://js.puter.com/v2/"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --purple:#9333ea;
+    --purple-2:#a855f7;
+    --pink:#f472b6;
+    --grad-active: linear-gradient(135deg, var(--purple-2), var(--pink));
+    --bg-grad: radial-gradient(circle at 15% 10%, rgba(196,132,252,.16), transparent 45%),
+               radial-gradient(circle at 85% 25%, rgba(244,114,182,.14), transparent 45%),
+               radial-gradient(circle at 50% 90%, rgba(147,197,253,.14), transparent 45%),
+               #fbfaff;
+    --ink:#20202b;
+    --ink-dim:#8a8a9a;
+    --border:#eef0f5;
+    --sidebar-bg:#ffffff;
+    --card-shadow:0 4px 22px rgba(80,50,140,.07);
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Vazirmatn', sans-serif;
+    color:var(--ink);
+    background:#fbfaff;
+    overflow:hidden;
+  }
+
+  .shell{
+    height:100vh;
+    height:100dvh;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* ---------- header ---------- */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px;
+    border-bottom:1px solid var(--border);
+    background:#fff;
+    flex-shrink:0;
+    z-index:20;
+  }
+  .brand{ display:flex; align-items:center; gap:8px; font-weight:800; font-size:17px; }
+  .icon-btns{ display:flex; align-items:center; gap:8px; }
+  .icon-btn{
+    width:36px; height:36px; border-radius:11px; border:1px solid var(--border);
+    background:#fff; display:flex; align-items:center; justify-content:center;
+    font-size:16px; cursor:pointer; color:var(--ink-dim); flex-shrink:0;
+  }
+  .icon-btn.model-toggle{ display:none; }
+
+  .tabnav{
+    display:flex; justify-content:flex-end; gap:6px;
+    padding:10px 18px;
+    background:#fff;
+    border-bottom:1px solid var(--border);
+    flex-shrink:0;
+  }
+  .tabnav button{
+    border:none; background:none; font-family:inherit; font-size:12.5px; font-weight:600;
+    color:var(--ink-dim); padding:8px 16px; border-radius:999px; cursor:pointer;
+  }
+  .tabnav button.active{ background:var(--grad-active); color:#fff; }
+
+  /* ---------- layout body ---------- */
+  .body-row{ flex:1; display:flex; min-height:0; position:relative; }
+
+  /* ---------- sidebar ---------- */
+  .sidebar{
+    width:300px; flex-shrink:0;
+    background:var(--sidebar-bg);
+    border-inline-start:1px solid var(--border);
+    display:flex; flex-direction:column;
+    overflow:hidden;
+  }
+  .sidebar-head{
+    padding:16px 16px 10px;
+    display:flex; align-items:center; justify-content:space-between;
+    flex-shrink:0;
+  }
+  .sidebar-head h2{ margin:0; font-size:14px; font-weight:700; }
+  .model-count-badge{
+    font-size:11px; font-weight:700; color:var(--purple);
+    background:#f5eeff; padding:4px 10px; border-radius:999px;
+  }
+  .search-wrap{ padding:0 16px 12px; flex-shrink:0; }
+  .search-wrap input{
+    width:100%; padding:10px 12px; border-radius:11px; border:1px solid var(--border);
+    background:#f9f8fc; font-family:inherit; font-size:13px; outline:none; color:var(--ink);
+  }
+  .search-wrap input:focus{ border-color:var(--purple-2); }
+
+  .provider-list{ flex:1; overflow-y:auto; padding:0 12px 8px; }
+  .provider-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:11px 12px; border-radius:13px; cursor:pointer;
+    margin-bottom:4px; border:1px solid transparent;
+  }
+  .provider-row:hover{ background:#f8f6fc; }
+  .provider-row.active{ background:#f6efff; border-color:#e7d6fb; }
+  .provider-row .p-left{ display:flex; align-items:center; gap:10px; font-size:13px; font-weight:600; }
+  .provider-row .p-icon{
+    width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+    font-size:13px; flex-shrink:0; background:#f1eefb;
+  }
+  .provider-row .p-count{
+    font-size:11px; color:var(--ink-dim); background:#f2f2f6; padding:3px 8px; border-radius:999px; flex-shrink:0;
+  }
+  .provider-row.active .p-count{ color:var(--purple); background:#efe1ff; }
+
+  .quick-title{ padding:14px 16px 6px; font-size:12px; font-weight:700; color:var(--ink-dim); flex-shrink:0; }
+  .quick-list{ padding:0 12px 14px; flex-shrink:0; }
+  .quick-item{
+    display:flex; align-items:center; gap:10px; padding:10px 12px;
+    border-radius:12px; cursor:pointer; margin-bottom:4px; border:1px solid var(--border);
+  }
+  .quick-item:hover{ background:#f9f8fc; }
+  .quick-item .q-icon{ font-size:15px; }
+  .quick-item .q-text{ font-size:12.5px; font-weight:600; }
+
+  .sidebar-backdrop{ display:none; }
+
+  /* ---------- main chat ---------- */
+  .main{
+    flex:1; min-width:0; display:flex; flex-direction:column;
+    background:var(--bg-grad);
+  }
+  .messages{
+    flex:1; overflow-y:auto; padding:24px 20px;
+    display:flex; flex-direction:column; gap:14px;
+  }
+
+  .welcome{ margin:auto; text-align:center; max-width:440px; padding:20px; }
+  .welcome .avatar{
+    width:64px; height:64px; margin:0 auto 16px; border-radius:20px;
+    background:linear-gradient(135deg,#e9d5ff,#fbcfe8);
+    display:flex; align-items:center; justify-content:center; font-size:30px;
+  }
+  .welcome h3{ margin:0 0 8px; font-size:19px; font-weight:800; color:var(--purple); }
+  .welcome p{ margin:0 0 20px; font-size:13px; color:var(--ink-dim); line-height:1.9; }
+
+  .suggest-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .suggest-card{
+    background:#fff; border:1px solid var(--border); border-radius:14px;
+    padding:14px 12px; text-align:center; cursor:pointer; box-shadow:var(--card-shadow);
+  }
+  .suggest-card .s-icon{ font-size:18px; margin-bottom:6px; }
+  .suggest-card .s-title{ font-size:12.5px; font-weight:700; margin-bottom:3px; }
+  .suggest-card .s-desc{ font-size:11px; color:var(--ink-dim); line-height:1.5; }
+
+  .msg{ max-width:80%; padding:12px 15px; border-radius:16px; font-size:14px; line-height:1.85; white-space:pre-wrap; }
+  .msg.user{ align-self:flex-end; background:var(--grad-active); color:#fff; border-bottom-left-radius:4px; }
+  .msg.ai{ align-self:flex-start; background:#fff; border:1px solid var(--border); box-shadow:var(--card-shadow); border-bottom-right-radius:4px; }
+  .msg.ai .tag{ display:block; font-size:10px; font-weight:700; color:var(--purple); margin-bottom:5px; }
+  .msg.error{ color:#c0392b; }
+
+  /* ---------- gate ---------- */
+  .gate{ margin:auto; text-align:center; max-width:360px; padding:20px; }
+  .gate p{ font-size:13px; color:var(--ink-dim); line-height:1.9; margin-bottom:16px; }
+  .signin-btn{
+    background:var(--grad-active); color:#fff; border:none; font-family:inherit;
+    font-weight:700; font-size:13.5px; padding:11px 24px; border-radius:12px; cursor:pointer;
+  }
+
+  /* ---------- input ---------- */
+  .input-bar{
+    background:#fff; border-top:1px solid var(--border);
+    padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+    flex-shrink:0;
+  }
+  .input-row{ display:flex; align-items:flex-end; gap:10px; }
+  .input-row textarea{
+    flex:1; resize:none; border:1px solid var(--border); border-radius:14px;
+    background:#f9f8fc; font-family:inherit; font-size:13.5px; color:var(--ink);
+    padding:11px 14px; outline:none; max-height:110px; min-height:44px;
+  }
+  .input-row textarea:focus{ border-color:var(--purple-2); }
+  .send-btn{
+    width:42px; height:42px; border-radius:12px; border:none; flex-shrink:0;
+    background:var(--grad-active); color:#fff; font-size:17px; cursor:pointer;
+  }
+  .send-btn:disabled{ opacity:.5; }
+  .input-meta{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:7px; font-size:10.5px; color:var(--ink-dim);
+  }
+  .input-meta .model-live{ display:flex; align-items:center; gap:5px; }
+  .dot{ width:6px; height:6px; border-radius:50%; background:#22c55e; flex-shrink:0; }
+
+  /* ---------- mobile ---------- */
+  @media (max-width: 880px){
+    .icon-btn.model-toggle{ display:flex; }
+    .sidebar{
+      position:fixed; inset-inline-end:0; top:0; bottom:0;
+      width:min(84vw, 330px);
+      transform:translateX(105%);
+      transition:transform .28s ease;
+      z-index:50;
+      box-shadow:-8px 0 30px rgba(0,0,0,.15);
+    }
+    html[dir="rtl"] .sidebar{ transform:translateX(-105%); }
+    .sidebar.open{ transform:translateX(0); }
+    .sidebar-backdrop{
+      display:none; position:fixed; inset:0; background:rgba(20,15,35,.4); z-index:40;
+    }
+    .sidebar-backdrop.open{ display:block; }
+    .suggest-grid{ grid-template-columns:1fr 1fr; }
+    .msg{ max-width:88%; }
+    .tabnav{ justify-content:space-between; }
+    .tabnav button{ flex:1; text-align:center; padding:8px 6px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <header>
+    <div class="brand">🤖 چت‌بات AI</div>
+    <div class="icon-btns">
+      <button class="icon-btn" title="گالری">🖼️</button>
+      <button class="icon-btn" title="تنظیمات">⚙️</button>
+      <button class="icon-btn model-toggle" id="modelToggle" title="انتخاب مدل">🧩</button>
+    </div>
+  </header>
+
+  <div class="tabnav">
+    <button data-tab="settings">تنظیمات</button>
+    <button data-tab="history">تاریخچه</button>
+    <button data-tab="chat" class="active">گفتگو</button>
+  </div>
+
+  <div class="body-row">
+    <div class="sidebar-backdrop" id="backdrop"></div>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <h2>انتخاب مدل</h2>
+        <span class="model-count-badge" id="modelCountBadge">…</span>
+      </div>
+      <div class="search-wrap">
+        <input type="text" id="modelSearch" placeholder="جستجوی مدل…">
+      </div>
+      <div class="provider-list" id="providerList"></div>
+      <div class="quick-title">پرامپت‌های سریع ⚡</div>
+      <div class="quick-list">
+        <div class="quick-item" data-prompt="یک داستان کوتاه درباره ">
+          <span class="q-icon">📖</span><span class="q-text">داستان کوتاه</span>
+        </div>
+        <div class="quick-item" data-prompt="یک قطعه کد بنویس برای ">
+          <span class="q-icon">💻</span><span class="q-text">کدنویسی</span>
+        </div>
+        <div class="quick-item" data-prompt="این مفهوم را ساده توضیح بده: ">
+          <span class="q-icon">🎓</span><span class="q-text">توضیح مفهوم</span>
+        </div>
+        <div class="quick-item" data-prompt="یک ایمیل رسمی بنویس درباره ">
+          <span class="q-icon">✉️</span><span class="q-text">نگارش ایمیل</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="messages" id="messages">
+        <div class="gate" id="gate">
+          <p>برای گفتگو با بیش از ۵۰۰ مدل هوش مصنوعی، وارد حساب Puter خودت شو.</p>
+          <button class="signin-btn" id="signInBtn">ورود با Puter</button>
+        </div>
+      </div>
+
+      <div class="input-bar">
+        <div class="input-row">
+          <textarea id="input" placeholder="پیام خود را بنویسید… (Shift+Enter برای خط جدید)" rows="1"></textarea>
+          <button class="send-btn" id="sendBtn">➤</button>
+        </div>
+        <div class="input-meta">
+          <span>Enter برای ارسال، Shift+Enter برای خط جدید</span>
+          <span class="model-live"><span class="dot"></span><span id="currentModelLabel">—</span></span>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+  const PROVIDER_ICONS = {
+    openai:'🧠', claude:'🟠', anthropic:'🟠', google:'🔷', gemini:'🔷',
+    'x-ai':'⚡', xai:'⚡', deepseek:'🔍', 'meta-llama':'🦙', meta:'🦙',
+    qwen:'🎐', mistralai:'🌬️', mistral:'🌬️', perplexity:'🔎', cohere:'🔶',
+    'z-ai':'⬛', moonshotai:'🌙', inception:'✏️', openrouter:'🌐', infron:'🌐'
+  };
+  const PROVIDER_LABELS = {
+    openai:'OpenAI', claude:'Anthropic Claude', anthropic:'Anthropic Claude',
+    google:'Google Gemini', gemini:'Google Gemini', 'x-ai':'xAI Grok', xai:'xAI Grok',
+    deepseek:'DeepSeek', 'meta-llama':'Meta Llama', meta:'Meta Llama', qwen:'Qwen (Alibaba)',
+    mistralai:'Mistral', mistral:'Mistral', perplexity:'Perplexity', cohere:'Cohere',
+    'z-ai':'Z.ai (GLM)', moonshotai:'Moonshot AI (Kimi)', inception:'Inception Labs',
+    openrouter:'OpenRouter', infron:'Infron'
+  };
+
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('backdrop');
+  const modelToggle = document.getElementById('modelToggle');
+  const providerList = document.getElementById('providerList');
+  const modelSearch = document.getElementById('modelSearch');
+  const modelCountBadge = document.getElementById('modelCountBadge');
+  const messagesEl = document.getElementById('messages');
+  const gate = document.getElementById('gate');
+  const input = document.getElementById('input');
+  const sendBtn = document.getElementById('sendBtn');
+  const currentModelLabel = document.getElementById('currentModelLabel');
+
+  let allModels = [];
+  let providers = {};
+  let currentModel = 'gpt-5.4-nano';
+  let history = [];
+  let busy = false;
+  let signedIn = false;
+
+  function openSidebar(){ sidebar.classList.add('open'); backdrop.classList.add('open'); }
+  function closeSidebar(){ sidebar.classList.remove('open'); backdrop.classList.remove('open'); }
+  modelToggle.onclick = openSidebar;
+  backdrop.onclick = closeSidebar;
+
+  document.querySelectorAll('.tabnav button').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.tabnav button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    };
+  });
+
+  function renderProviders(filter){
+    providerList.innerHTML = '';
+    const keys = Object.keys(providers).sort((a,b) => providers[b].length - providers[a].length);
+    keys.forEach(key => {
+      const label = PROVIDER_LABELS[key] || key;
+      if(filter && !label.toLowerCase().includes(filter) && !key.includes(filter)) return;
+      const row = document.createElement('div');
+      row.className = 'provider-row' + (key === currentProviderKey() ? ' active' : '');
+      row.innerHTML = `
+        <div class="p-left">
+          <span class="p-icon">${PROVIDER_ICONS[key] || '✨'}</span>
+          <span>${label}</span>
+        </div>
+        <span class="p-count">${providers[key].length}</span>
+      `;
+      row.onclick = () => selectProvider(key);
+      providerList.appendChild(row);
+    });
+  }
+
+  function currentProviderKey(){
+    const m = allModels.find(m => m.id === currentModel);
+    return m ? m.provider : null;
+  }
+
+  function selectProvider(key){
+    const models = providers[key];
+    if(!models || !models.length) return;
+    const flagship = models.find(m => !/nano|mini|lite|small/i.test(m.id)) || models[0];
+    setCurrentModel(flagship.id);
+    renderProviders();
+    if(window.innerWidth <= 880) closeSidebar();
+  }
+
+  function setCurrentModel(id){
+    currentModel = id;
+    currentModelLabel.textContent = id;
+  }
+
+  modelSearch.addEventListener('input', () => {
+    const v = modelSearch.value.trim().toLowerCase();
+    if(!v){ renderProviders(); return; }
+    const matches = allModels.filter(m => m.id.toLowerCase().includes(v) || (m.name||'').toLowerCase().includes(v)).slice(0,30);
+    providerList.innerHTML = '';
+    matches.forEach(m => {
+      const row = document.createElement('div');
+      row.className = 'provider-row' + (m.id === currentModel ? ' active' : '');
+      row.innerHTML = `
+        <div class="p-left">
+          <span class="p-icon">${PROVIDER_ICONS[m.provider] || '✨'}</span>
+          <span>${m.name || m.id}</span>
+        </div>
+        <span class="p-count">${m.provider || ''}</span>
+      `;
+      row.onclick = () => { setCurrentModel(m.id); renderProviders(modelSearch.value.trim().toLowerCase()); if(window.innerWidth <= 880) closeSidebar(); };
+      providerList.appendChild(row);
+    });
+  });
+
+  async function loadModels(){
+    try{
+      allModels = await puter.ai.listModels();
+      providers = {};
+      allModels.forEach(m => {
+        const key = m.provider || 'other';
+        if(!providers[key]) providers[key] = [];
+        providers[key].push(m);
+      });
+      modelCountBadge.textContent = `${allModels.length.toLocaleString('fa-IR')} مدل`;
+      if(!allModels.find(m => m.id === currentModel) && allModels.length){
+        setCurrentModel(allModels[0].id);
+      } else {
+        setCurrentModel(currentModel);
+      }
+      renderProviders();
+    }catch(e){ console.error('listModels failed', e); }
+  }
+
+  function showWelcome(){
+    messagesEl.innerHTML = `
+      <div class="welcome" id="welcomeBlock">
+        <div class="avatar">🤖</div>
+        <h3>سلام! من دستیار هوشمند شما هستم</h3>
+        <p>با بیش از ۵۰۰ مدل هوش مصنوعی از OpenAI، Anthropic، Google، xAI، DeepSeek و... گفتگو کنید!</p>
+        <div class="suggest-grid">
+          <div class="suggest-card" data-prompt="یک برنامه غذایی رژیمی سالم و متعادل برای یک هفته بنویس">
+            <div class="s-icon">🥗</div><div class="s-title">برنامه غذایی</div><div class="s-desc">رژیم سالم و متعادل</div>
+          </div>
+          <div class="suggest-card" data-prompt="یک شعر زیبا و احساسی درباره بهار بنویس">
+            <div class="s-icon">🌸</div><div class="s-title">شعر بهار</div><div class="s-desc">یک شعر زیبا و احساسی</div>
+          </div>
+          <div class="suggest-card" data-prompt="مفاهیم پایه هوش مصنوعی را ساده توضیح بده">
+            <div class="s-icon">💡</div><div class="s-title">هوش مصنوعی</div><div class="s-desc">توضیح مفاهیم پایه</div>
+          </div>
+          <div class="suggest-card" data-prompt="راهنمای ساخت یک وبسایت را قدم به قدم توضیح بده">
+            <div class="s-icon">🌐</div><div class="s-title">ساخت وبسایت</div><div class="s-desc">راهنمای گام به گام</div>
+          </div>
+        </div>
+      </div>
+    `;
+    messagesEl.querySelectorAll('.suggest-card').forEach(card => {
+      card.onclick = () => { input.value = card.dataset.prompt; send(); };
+    });
+  }
+
+  document.querySelectorAll('.quick-item').forEach(item => {
+    item.onclick = () => {
+      input.value = item.dataset.prompt;
+      input.focus();
+      autoResize();
+      if(window.innerWidth <= 880) closeSidebar();
+    };
+  });
+
+  function addMessage(role, text, tag){
+    const welcomeBlock = document.getElementById('welcomeBlock');
+    if(welcomeBlock) welcomeBlock.remove();
+    const div = document.createElement('div');
+    div.className = 'msg ' + (role === 'user' ? 'user' : 'ai');
+    if(role !== 'user'){
+      const t = document.createElement('span');
+      t.className = 'tag';
+      t.textContent = tag || currentModel;
+      div.appendChild(t);
+    }
+    const span = document.createElement('span');
+    span.textContent = text;
+    div.appendChild(span);
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return span;
+  }
+
+  function autoResize(){
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 110) + 'px';
+  }
+  input.addEventListener('input', autoResize);
+  input.addEventListener('keydown', e => {
+    if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); }
+  });
+  sendBtn.onclick = send;
+
+  async function send(){
+    const text = input.value.trim();
+    if(!text || busy) return;
+
+    if(!signedIn){
+      try{ await puter.auth.signIn(); signedIn = true; onSignedIn(); }
+      catch(e){ return; }
+    }
+
+    busy = true; sendBtn.disabled = true;
+    input.value = ''; autoResize();
+
+    addMessage('user', text);
+    history.push({ role:'user', content:text });
+    const aiNode = addMessage('ai', '', currentModel);
+
+    try{
+      const resp = await puter.ai.chat(history, { model: currentModel, stream:true });
+      let full = '';
+      for await (const part of resp){
+        if(part.text){ full += part.text; aiNode.textContent = full; messagesEl.scrollTop = messagesEl.scrollHeight; }
+      }
+      history.push({ role:'assistant', content:full });
+    }catch(e){
+      console.error(e);
+      aiNode.textContent = 'خطا در دریافت پاسخ. دوباره امتحان کن.';
+      aiNode.parentElement.classList.add('error');
+    }finally{
+      busy = false; sendBtn.disabled = false; input.focus();
+    }
+  }
+
+  document.getElementById('signInBtn').onclick = async () => {
+    try{ await puter.auth.signIn(); signedIn = true; onSignedIn(); }catch(e){}
+  };
+
+  function onSignedIn(){
+    showWelcome();
+    loadModels();
+  }
+
+  (async function init(){
+    signedIn = await puter.auth.isSignedIn();
+    if(signedIn){ onSignedIn(); }
+  })();
+</script>
+</body>
+</html>
